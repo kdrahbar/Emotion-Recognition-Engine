@@ -31,7 +31,7 @@ int main()
 {
 	std::vector<int> landmarks = file_to_vector();
 	frame *neutral = new frame(landmarks);
-	neutral->rotate('l');
+	neutral->rotate();
 	neutral->calc_centroids();
 
 
