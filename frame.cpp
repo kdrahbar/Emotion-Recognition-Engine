@@ -1,5 +1,6 @@
 #include "frame.h"
 #define dist_between(p1, p2) sqrt( pow((p2.x - p1.x), 2) + pow((p2.y - p1.y), 2) )
+#define ratio(p1, p2) (p1 - p2)/p2
 
 //Helper function to multiply rotation matrix by landmark matrix
 void frame::matrix_mult(float angle)
@@ -20,8 +21,6 @@ void frame::matrix_mult(float angle, std::vector<point> inp_mat)
 	}	
 }
 
-// This is used in extract_eye_feat. In matlab code it has landmarks of 6:
-// So is that 6 through 11 or 5 throught eleven?
 point* frame::calc_centroid(std::vector<point> neutral_marks)
 {
 	int x_sum=0, y_sum=0;
@@ -55,8 +54,8 @@ void frame::calc_centroids()
 
 void frame::create_brow_landmarks()
 {
-	int r_tmp [11] ={6,7,8,9,10,26,27,28,29,30,31};
-	int l_tmp [11]= {1,2,3,4,5,20,21,22,23,24,25};
+	int r_tmp [11] ={5,6,7,8,9,25,26,27,28,29,30};
+	int l_tmp [11]= {0,1,2,3,4,19,20,21,22,23,24};
 	for (int i = 0; i < 11; i++)
 	{
 		l_eyebrow_landmks.push_back(landmarks[l_tmp[i]]);
@@ -80,11 +79,11 @@ std::vector<float> frame::get_dist(std::vector<point> lndmarks)
 	std::vector<float> feat_point;
 	feat_point.push_back( dist_between(lndmarks[5], lndmarks[0]) );
 	feat_point.push_back( dist_between(lndmarks[8], lndmarks[4]) );
-	float a1 = atan( (lndmarks[0].y - lndmarks[5].y)/ (lndmarks[0].x - lndmarks[5].x)*180/3.14 );
+	float a1 = atan( (lndmarks[0].y - lndmarks[5].y)/ (lndmarks[0].x - lndmarks[5].x) ) *180/3.14;
 	if (a1 < 0)
 		a1 += 180;
 	feat_point.push_back(a1);
-	float a2 = atan( (lndmarks[4].y - lndmarks[8].y)/ (lndmarks[4].x - lndmarks[8].x)*180/3.14 );
+	float a2 = atan( (lndmarks[4].y - lndmarks[8].y)/ (lndmarks[4].x - lndmarks[8].x) )*180/3.14;
 	if (a2 < 0)
 		a2 += 180;
 	feat_point.push_back(a2);
@@ -98,6 +97,7 @@ std::vector<float> frame::get_dist(std::vector<point> lndmarks)
 }
 
 
+
 // Constructor that builds the landmark vector given a starting row (from a file)
 frame::frame(std::vector<int> input_file, int start_row)
 {
@@ -106,7 +106,7 @@ frame::frame(std::vector<int> input_file, int start_row)
 	for( int i = start_index; i < (start_index + 98); i+=2 )
 	{
 		add_point.x = input_file[i];
-		add_point.y = input_file[i+1];
+		add_point.y = -input_file[i+1];
 		landmarks.push_back(add_point);
 	}
 	create_brow_landmarks();
@@ -115,7 +115,7 @@ frame::frame(std::vector<int> input_file, int start_row)
 void frame::rotate()
 {
 	float angle;
-	angle = atan( (landmarks[5].x - landmarks[6].x)/(landmarks[5].y - landmarks[6].y) );
+	angle = atan( (landmarks[4].y - landmarks[5].y)/(landmarks[4].x - landmarks[5].x) );
 	cout << "Angle to be rotated: " << angle << '\n';
 	matrix_mult(angle);
 }
@@ -131,4 +131,26 @@ std::vector<float> frame::extract_eyebrow_feat(point neutral_ctrd, std::vector<p
 	add_translation(translate, lndmarks);
 	return get_dist(lndmarks);
 
+}
+
+std::vector<point> get_eye_feat(std::vector<point> peek_feat, std::vector<point> neutral_feat)
+{
+	std::vector<point> eye_feat;
+	point temp;
+	for (int i = 0; i < 6; i++)
+	{
+		if(i == 2 || i == 3)
+		{	
+			temp.x = abs (peek_feat[i].x - neutral_feat[i].x)/neutral_feat[i].x * 100;
+			temp.y = abs (peek_feat[i].y - neutral_feat[i].y)/neutral_feat[i].y * 100;
+			eye_feat.push_back(temp);
+		}
+		else
+		{
+			temp.x = ratio(peek_feat[i].x, neutral_feat[i].x)/neutral_feat[i].x * 100;
+			temp.y = ratio(peek_feat[i].y, neutral_feat[i].y)/neutral_feat[i].y * 100;
+			eye_feat.push_back(temp);
+		}
+	}
+	return eye_feat;
 }

@@ -7,6 +7,7 @@
 #include <fstream>
 #include <string>
 #include <iostream>
+#include <cmath> 
 
 using namespace std;
 
@@ -41,6 +42,9 @@ class frame
 		void rotate();
 		std::vector<float> extract_eyebrow_feat(point neutral_ctrd, std::vector<point> lndmarks);
 		void calc_centroids();
+		//std::vector<point> get_l_eye_feat(std::vecotr<point> peek_left_feat);
+		//std::vector<point> get_r_eye_feat(std::vecotr<point> peek_right_feat);
+
 
 
 

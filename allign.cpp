@@ -29,10 +29,22 @@ std::vector<int> file_to_vector()
 
 int main()
 {
-	std::vector<int> landmarks = file_to_vector();
-	frame *neutral = new frame(landmarks);
+	std::vector<int> lndmarks = file_to_vector();
+	// Creates the neutral landmarks
+	frame *neutral = new frame(lndmarks);
+	//for(int i =0; i < neutral->landmarks.size(); i++)
+	//	cout << neutral->landmarks[i].x << " " << neutral->landmarks[i].y << '\n';
 	neutral->rotate();
+	//for(int i =0; i < neutral->landmarks.size(); i++)
+	//	cout << neutral->landmarks[i].x << " " << neutral->landmarks[i].y << '\n';
+	
 	neutral->calc_centroids();
-
+	//cout << neutral->l_centroid.x << " " << neutral->l_centroid.y << '\n';
+	for(int i =0; i < neutral->l_eyebrow_landmks.size(); i++)
+		cout << neutral->l_eyebrow_landmks[i].x << " " << neutral->l_eyebrow_landmks[i].y << '\n';
+	
+	std::vector<float> lndmk = neutral->extract_eyebrow_feat(neutral->l_centroid, neutral->l_eyebrow_landmks);
+	for (int i = 0; i < lndmk.size(); i ++)
+		cout << lndmk[i] << '\n';
 
 }
