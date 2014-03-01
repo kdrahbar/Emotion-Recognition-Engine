@@ -29,8 +29,8 @@ class frame
 		std::vector<float> get_dist(std::vector<point> lndmarks);
 
 	public: 
-		std::vector<point> r_eyebrow_landmks;
-		std::vector<point> l_eyebrow_landmks; 
+		std::vector<point> r_eyebrow_landmks; // Holds the INDICIES of the right eyebrow landmarks
+		std::vector<point> l_eyebrow_landmks; // Holds the INDICIES of the left eyebrow landmarks
 		point l_centroid;
 		point r_centroid;
 		std::vector<point> landmarks;

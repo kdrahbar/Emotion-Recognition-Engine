@@ -54,8 +54,8 @@ void frame::calc_centroids()
 
 void frame::create_brow_landmarks()
 {
-	int r_tmp [11] ={5,6,7,8,9,25,26,27,28,29,30};
-	int l_tmp [11]= {0,1,2,3,4,19,20,21,22,23,24};
+	int r_tmp [11] = {5,6,7,8,9,25,26,27,28,29,30};
+	int l_tmp [11] = {0,1,2,3,4,19,20,21,22,23,24};
 	for (int i = 0; i < 11; i++)
 	{
 		l_eyebrow_landmks.push_back(landmarks[l_tmp[i]]);
@@ -97,7 +97,6 @@ std::vector<float> frame::get_dist(std::vector<point> lndmarks)
 }
 
 
-
 // Constructor that builds the landmark vector given a starting row (from a file)
 frame::frame(std::vector<int> input_file, int start_row)
 {
@@ -133,6 +132,11 @@ std::vector<float> frame::extract_eyebrow_feat(point neutral_ctrd, std::vector<p
 
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////
+// FUNCTIONS NOT IN THE FRAME CLASS
+////////////////////////////////////////////////////////////////////////////////////////////
+
+// This function expects 
 std::vector<point> get_eye_feat(std::vector<point> peek_feat, std::vector<point> neutral_feat)
 {
 	std::vector<point> eye_feat;
@@ -154,3 +158,4 @@ std::vector<point> get_eye_feat(std::vector<point> peek_feat, std::vector<point>
 	}
 	return eye_feat;
 }
+
