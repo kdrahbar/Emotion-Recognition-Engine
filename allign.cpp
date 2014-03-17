@@ -5,6 +5,7 @@
 #include <string>
 #include "frame.h"
 #include <stdlib.h>
+#include "debug.h"
 
 using namespace std;
 
@@ -73,36 +74,50 @@ std::vector<float> bayes_parser(char input[])
 int main()
 {
 	char input[] = "landmarks.txt";
-	char bayes_file_name[] = "output.txt";
+	char bayes_file_name[] = "output.txt"; 
 	// Serialize the points into a vector
 	std::vector<int> lndmarks = file_to_vector(input);
 	
 	// Creates the neutral landmarks
 	frame *neutral = new frame(lndmarks);
-	//for(int i =0; i < neutral->landmarks.size(); i++)
-	//	cout << neutral->landmarks[i].x << " " << neutral->landmarks[i].y << '\n';
-	
 	neutral->rotate();
-	//for(int i =0; i < neutral->landmarks.size(); i++)
-	//	cout << neutral->landmarks[i].x << " " << neutral->landmarks[i].y << '\n';
-	
 	neutral->calc_centroids();
-	//cout << neutral->l_centroid.x << " " << neutral->l_centroid.y << '\n';
-	for(int i =0; i < neutral->l_eyebrow_landmks.size(); i++)
-		cout << neutral->l_eyebrow_landmks[i].x << " " << neutral->l_eyebrow_landmks[i].y << '\n';
 	
-	std::vector<float> lndmk = neutral->extract_eyebrow_feat(neutral->l_centroid, neutral->l_eyebrow_landmks);
-	for (int i = 0; i < lndmk.size(); i ++)
-		cout << lndmk[i] << '\n';
+	std::vector<float> lndmk_l = neutral->extract_eyebrow_feat(neutral->l_centroid, neutral->l_eyebrow_landmks);
+	std::vector<float> lndmk_r = neutral->extract_eyebrow_feat(neutral->r_centroid, neutral->r_eyebrow_landmks);
+	cout << "\n" << "Neutral Left Landmarks: ";
+	debug::print_vec(lndmk_l);
+	cout << "\n" << "Neutral Right Landmarks: ";
+	debug::print_vec(lndmk_r);
+
+	frame *tst_frame = new frame(lndmarks, 1);
+	tst_frame->rotate();
+	tst_frame->calc_centroids();
+
+	std::vector<float> tst_lndmk_l = tst_frame->extract_eyebrow_feat(neutral->l_centroid, tst_frame->l_eyebrow_landmks);
+	std::vector<float> tst_lndmk_r = tst_frame->extract_eyebrow_feat(neutral->r_centroid, tst_frame->r_eyebrow_landmks);
+	cout <<"\n" << "Test Landmarks Left:";
+	debug::print_vec(tst_lndmk_l);
+	cout <<"\n" << "Test Landmarks Right:";
+	debug::print_vec(tst_lndmk_r);
+
+	std::vector<float> final_features_l = frame::eye_feat_ratio(tst_lndmk_l, lndmk_l);
+	std::vector<float> final_features_r = frame::eye_feat_ratio(tst_lndmk_r, lndmk_r);
+
+	final_features_l.insert(final_features_l.end(), final_features_r.begin(), final_features_r.end());
+	std::vector<float> final_features = final_features_l;
 
 	// Python parser that cleans up the original naive bayes file
 	system("python naive_bayes_parse.py");
 	std::vector<float> naive_bayes_file = bayes_parser(bayes_file_name);
 
+	std::vector<float> prob_vec;
+	prob_vec = frame::calc_probs(naive_bayes_file, final_features);
+
 	//Print class B values from bayes parser
-	cout << "Class B begins: " << '\n' << '\n';
-	int file_size = naive_bayes_file.size();
-	for (int i = file_size/2; i < file_size; i++ )
-		cout << naive_bayes_file[i] << '\n';
+	//cout << "Class B begins: " << '\n' << '\n';
+	//int file_size = naive_bayes_file.size();
+	//for (int i = file_size/2; i < file_size; i++ )
+	//	cout << naive_bayes_file[i] << '\n';
 
 }

@@ -72,6 +72,37 @@ void frame::add_translation(point trans, std::vector<point> matrix)
 	}
 }
 
+float frame::get_probability(float feat, float mean, float std, float precision)
+{
+	return exp( -pow( (feat - mean), 2 )/(2* pow(std,2)) )/( pow( (2*3.14), (1/2) )*std );
+}
+
+//Given the calculated feature values (after finding final ratios) calculate the probablility associated with each class
+std::vector<float> frame::calc_probs(std::vector<float> model_vals, std::vector<float> feat_vals)
+{
+	float prob = 0; 
+	int itr_size = model_vals.size();
+	int lin_count = 0;
+	std:vector<float> class_probs; // Vector of size two holding prob for class A and B
+
+	// Iterate through each feature for class A and sum to get the probability
+	for(int i = 0; i < itr_size/2 ; i+=3)
+	{
+			prob += get_probability(feat_vals[lin_count], model_vals[i], model_vals[i+1], model_vals[i+2]);
+			lin_count++;
+	}
+	class_probs.push_back(prob);
+	prob = 0;
+	// Iterate through each feature for class B and sum to get the probabilty
+	for(int i = itr_size/2; i < itr_size ; i+=3)
+	{
+			prob += get_probability(feat_vals[lin_count], model_vals[i], model_vals[i+1], model_vals[i+2]);
+			lin_count++;
+	}
+	class_probs.push_back(prob);
+	return class_probs;
+}
+
 // Need a better value for pi
 // Used by Extract eyebrow feat to calculate L1, L2, L3, L4, A1, A2
 std::vector<float> frame::get_dist(std::vector<point> lndmarks)
@@ -100,7 +131,7 @@ std::vector<float> frame::get_dist(std::vector<point> lndmarks)
 // Constructor that builds the landmark vector given a starting row (from a file)
 frame::frame(std::vector<int> input_file, int start_row)
 {
-	int start_index = start_row*49;
+	int start_index = start_row*98;
 	point add_point;
 	for( int i = start_index; i < (start_index + 98); i+=2 )
 	{
@@ -133,29 +164,26 @@ std::vector<float> frame::extract_eyebrow_feat(point neutral_ctrd, std::vector<p
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-// FUNCTIONS NOT IN THE FRAME CLASS
+// STATIC FUNCTIONS  
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-// This function expects 
-std::vector<point> get_eye_feat(std::vector<point> peek_feat, std::vector<point> neutral_feat)
+// Calculate the ratio between the neutral and peek frames 
+std::vector<float> frame::eye_feat_ratio(std::vector<float> peek_feat, std::vector<float> neutral_feat)
 {
-	std::vector<point> eye_feat;
-	point temp;
+	std::vector<float> eye_feat;
+	float temp;
 	for (int i = 0; i < 6; i++)
 	{
 		if(i == 2 || i == 3)
 		{	
-			temp.x = abs (peek_feat[i].x - neutral_feat[i].x)/neutral_feat[i].x * 100;
-			temp.y = abs (peek_feat[i].y - neutral_feat[i].y)/neutral_feat[i].y * 100;
+			temp = abs (peek_feat[i] - neutral_feat[i])/neutral_feat[i] * 100;
 			eye_feat.push_back(temp);
 		}
 		else
 		{
-			temp.x = ratio(peek_feat[i].x, neutral_feat[i].x)/neutral_feat[i].x * 100;
-			temp.y = ratio(peek_feat[i].y, neutral_feat[i].y)/neutral_feat[i].y * 100;
+			temp = ratio(peek_feat[i], neutral_feat[i])/neutral_feat[i] * 100;
 			eye_feat.push_back(temp);
 		}
 	}
 	return eye_feat;
 }
-
