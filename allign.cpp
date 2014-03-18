@@ -107,13 +107,14 @@ int main()
 	final_features_l.insert(final_features_l.end(), final_features_r.begin(), final_features_r.end());
 	std::vector<float> final_features = final_features_l;
 
-	// Python parser that cleans up the original naive bayes file
-	system("python naive_bayes_parse.py");
+	system("python naive_bayes_parse.py"); // Python parser that cleans up the original naive bayes file
 	std::vector<float> naive_bayes_file = bayes_parser(bayes_file_name);
+	debug::print_vec(naive_bayes_file);
 
 	std::vector<float> prob_vec;
 	prob_vec = frame::calc_probs(naive_bayes_file, final_features);
-
+	cout << "\n" << "Class Probabilities: ";
+	debug::print_vec(prob_vec);
 	//Print class B values from bayes parser
 	//cout << "Class B begins: " << '\n' << '\n';
 	//int file_size = naive_bayes_file.size();

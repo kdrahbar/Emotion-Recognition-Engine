@@ -12,13 +12,14 @@ void frame::matrix_mult(float angle)
 	}
 }
 
-void frame::matrix_mult(float angle, std::vector<point> inp_mat)
+std::vector<point> frame::matrix_mult(float angle, std::vector<point> inp_mat)
 {
 	for (std::vector<point>::iterator it = inp_mat.begin() ; it != inp_mat.end(); ++it)
 	{
-		it->x = (it->x * cos(-angle)) + (it->y * sin(-angle));
+		it->x = (it->x * cos(-angle)) + (it->y * -sin(-angle));
 		it->y = (it->x * sin(-angle)) + (it->y * cos(-angle));
-	}	
+	}
+	return inp_mat;	
 }
 
 point* frame::calc_centroid(std::vector<point> neutral_marks)
@@ -52,6 +53,7 @@ void frame::calc_centroids()
 
 }
 
+// Used by constructor to create the indicie vectors corresponding to the l and r landmarks
 void frame::create_brow_landmarks()
 {
 	int r_tmp [11] = {5,6,7,8,9,25,26,27,28,29,30};
@@ -63,44 +65,14 @@ void frame::create_brow_landmarks()
 	}
 }
 
-void frame::add_translation(point trans, std::vector<point> matrix)
+std::vector<point> frame::add_translation(point trans, std::vector<point> matrix)
 {
 	for (std::vector<point>::iterator it = matrix.begin() ; it != matrix.end(); ++it)
 	{
 		it->x += trans.x;
 		it->y += trans.y;
 	}
-}
-
-float frame::get_probability(float feat, float mean, float std, float precision)
-{
-	return exp( -pow( (feat - mean), 2 )/(2* pow(std,2)) )/( pow( (2*3.14), (1/2) )*std );
-}
-
-//Given the calculated feature values (after finding final ratios) calculate the probablility associated with each class
-std::vector<float> frame::calc_probs(std::vector<float> model_vals, std::vector<float> feat_vals)
-{
-	float prob = 0; 
-	int itr_size = model_vals.size();
-	int lin_count = 0;
-	std:vector<float> class_probs; // Vector of size two holding prob for class A and B
-
-	// Iterate through each feature for class A and sum to get the probability
-	for(int i = 0; i < itr_size/2 ; i+=3)
-	{
-			prob += get_probability(feat_vals[lin_count], model_vals[i], model_vals[i+1], model_vals[i+2]);
-			lin_count++;
-	}
-	class_probs.push_back(prob);
-	prob = 0;
-	// Iterate through each feature for class B and sum to get the probabilty
-	for(int i = itr_size/2; i < itr_size ; i+=3)
-	{
-			prob += get_probability(feat_vals[lin_count], model_vals[i], model_vals[i+1], model_vals[i+2]);
-			lin_count++;
-	}
-	class_probs.push_back(prob);
-	return class_probs;
+	return matrix;
 }
 
 // Need a better value for pi
@@ -142,6 +114,7 @@ frame::frame(std::vector<int> input_file, int start_row)
 	create_brow_landmarks();
 }
 
+// Rotate feature matrix to center it
 void frame::rotate()
 {
 	float angle;
@@ -150,22 +123,24 @@ void frame::rotate()
 	matrix_mult(angle);
 }
 
+// Extract the eyebrow features given a neutral centroid and a vector of landmarks
 std::vector<float> frame::extract_eyebrow_feat(point neutral_ctrd, std::vector<point> lndmarks)
 {
-	float angle = atan( (lndmarks[6].y - lndmarks[9].y)/(lndmarks[6].x - lndmarks[9].y) );
-	matrix_mult(angle, lndmarks);
+	float angle = atan( (lndmarks[5].y - lndmarks[8].y)/(lndmarks[5].x - lndmarks[8].x) );
+	cout << angle;
+	lndmarks = matrix_mult(angle, lndmarks);
+	cout << '\n';
+	for(int i =0; i < lndmarks.size(); i++)
+		cout << '\n' << landmarks[i].x << " " << lndmarks[i].y;
+
 	point *centroid = calc_centroid(lndmarks);
 	point translate;
 	translate.x = neutral_ctrd.x - centroid->x;
 	translate.y = neutral_ctrd.y - centroid->y;
-	add_translation(translate, lndmarks);
+	lndmarks = add_translation(translate, lndmarks);
 	return get_dist(lndmarks);
 
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////
-// STATIC FUNCTIONS  
-////////////////////////////////////////////////////////////////////////////////////////////
 
 // Calculate the ratio between the neutral and peek frames 
 std::vector<float> frame::eye_feat_ratio(std::vector<float> peek_feat, std::vector<float> neutral_feat)
@@ -186,4 +161,33 @@ std::vector<float> frame::eye_feat_ratio(std::vector<float> peek_feat, std::vect
 		}
 	}
 	return eye_feat;
+}
+
+// Helper function used by calc_probs that calculates probability mass
+float frame::get_probability(float feat, float mean, float std, float precision)
+{
+	cout << '\n' << "Mean: " << mean << " Feat: " << feat << " Std: " << std;
+	cout << '\n' << "Value: " << exp( -pow( (feat - mean), 2 )/(2* pow(std,2)) )/( pow( (2*3.14), (1/2) )*std ); 
+	return exp( -pow( (feat - mean), 2 )/(2* pow(std,2)) )/( pow( (2*3.14), (1/2) )*std );
+}
+
+//Given the calculated feature values (after finding final ratios) calculate the probablility associated with each class
+std::vector<float> frame::calc_probs(std::vector<float> model_vals, std::vector<float> feat_vals)
+{
+	float prob_a = log(model_vals[0]);
+	float prob_b = log(model_vals[model_vals.size()/2 - 1]);
+	int itr_size = model_vals.size();
+	int lin_count = 2; // start at two since the first two values from the bayes vector are the class probs
+	std:vector<float> class_probs; // Vector of size two holding prob for class A and B
+   	
+	// Iterate through each feature for class A and B and sum to get the probability
+	for(int i = 1; i < itr_size ; i+=3)
+	{
+			prob_a += log(get_probability(feat_vals[lin_count], model_vals[i], model_vals[i+1], model_vals[i+3]));
+			prob_b += log(get_probability(feat_vals[lin_count], model_vals[i+itr_size/2], model_vals[i+itr_size/2 +1], model_vals[i+itr_size/2+2]));
+			lin_count++;
+	}
+	class_probs.push_back(prob_a);
+	class_probs.push_back(prob_b);
+	return class_probs;
 }

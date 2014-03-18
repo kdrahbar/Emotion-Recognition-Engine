@@ -8,7 +8,6 @@
 #include <string>
 #include <iostream>
 #include <cmath> 
-
 using namespace std;
 
 struct point 
@@ -22,9 +21,9 @@ class frame
 	
 	private:
 		void matrix_mult(float angle);
-		void matrix_mult(float angle, std::vector<point> inp_mat);
+		std::vector<point> matrix_mult(float angle, std::vector<point> inp_mat);
 		void create_brow_landmarks();
-		void add_translation(point trans, std::vector<point> matrix);
+		std::vector<point> add_translation(point trans, std::vector<point> matrix);
 		point *calc_centroid(std::vector<point> neutral_marks);
 		std::vector<float> get_dist(std::vector<point> lndmarks);
 		static float get_probability(float feat, float mean, float std, float precision);
