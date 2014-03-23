@@ -12,14 +12,13 @@ void frame::matrix_mult(float angle)
 	}
 }
 
-std::vector<point> frame::matrix_mult(float angle, std::vector<point> inp_mat)
+void frame::matrix_mult(float angle, std::vector<point> &inp_mat)
 {
 	for (std::vector<point>::iterator it = inp_mat.begin() ; it != inp_mat.end(); ++it)
 	{
 		it->x = (it->x * cos(-angle)) + (it->y * -sin(-angle));
 		it->y = (it->x * sin(-angle)) + (it->y * cos(-angle));
 	}
-	return inp_mat;	
 }
 
 point* frame::calc_centroid(std::vector<point> neutral_marks)
@@ -65,19 +64,18 @@ void frame::create_brow_landmarks()
 	}
 }
 
-std::vector<point> frame::add_translation(point trans, std::vector<point> matrix)
+void frame::add_translation(point trans, std::vector<point> &matrix)
 {
 	for (std::vector<point>::iterator it = matrix.begin() ; it != matrix.end(); ++it)
 	{
 		it->x += trans.x;
 		it->y += trans.y;
 	}
-	return matrix;
 }
 
 // Need a better value for pi
 // Used by Extract eyebrow feat to calculate L1, L2, L3, L4, A1, A2
-std::vector<float> frame::get_dist(std::vector<point> lndmarks)
+std::vector<float> frame::get_feats(std::vector<point> const &lndmarks)
 {
 	std::vector<float> feat_point;
 	feat_point.push_back( dist_between(lndmarks[5], lndmarks[0]) );
@@ -119,31 +117,42 @@ void frame::rotate()
 {
 	float angle;
 	angle = atan( (landmarks[4].y - landmarks[5].y)/(landmarks[4].x - landmarks[5].x) );
-	cout << "Angle to be rotated: " << angle << '\n';
 	matrix_mult(angle);
 }
 
 // Extract the eyebrow features given a neutral centroid and a vector of landmarks
-std::vector<float> frame::extract_eyebrow_feat(point neutral_ctrd, std::vector<point> lndmarks)
+void frame::extract_left_eyebrow_feat(point neutral_ctrd)
 {
-	float angle = atan( (lndmarks[5].y - lndmarks[8].y)/(lndmarks[5].x - lndmarks[8].x) );
-	cout << angle;
-	lndmarks = matrix_mult(angle, lndmarks);
-	cout << '\n';
-	for(int i =0; i < lndmarks.size(); i++)
-		cout << '\n' << landmarks[i].x << " " << lndmarks[i].y;
-
-	point *centroid = calc_centroid(lndmarks);
+	float angle = atan( (l_eyebrow_landmks[5].y - l_eyebrow_landmks[8].y)/(l_eyebrow_landmks[5].x - l_eyebrow_landmks[8].x) );
+	matrix_mult(angle, l_eyebrow_landmks);
+	
 	point translate;
-	translate.x = neutral_ctrd.x - centroid->x;
-	translate.y = neutral_ctrd.y - centroid->y;
-	lndmarks = add_translation(translate, lndmarks);
-	return get_dist(lndmarks);
-
+	translate.x = neutral_ctrd.x - l_centroid.x;
+	translate.y = neutral_ctrd.y - l_centroid.y;
+	add_translation(translate, l_eyebrow_landmks);
+	left_feats = get_feats(l_eyebrow_landmks);
 }
 
-// Calculate the ratio between the neutral and peek frames 
-std::vector<float> frame::eye_feat_ratio(std::vector<float> peek_feat, std::vector<float> neutral_feat)
+void frame::extract_right_eyebrow_feat(point neutral_ctrd)
+{
+	float angle = atan( (r_eyebrow_landmks[5].y - r_eyebrow_landmks[8].y)/(r_eyebrow_landmks[5].x - r_eyebrow_landmks[8].x) );
+	matrix_mult(angle, r_eyebrow_landmks);
+	
+	point translate;
+	translate.x = neutral_ctrd.x - r_centroid.x;
+	translate.y = neutral_ctrd.y - r_centroid.y;
+	add_translation(translate, r_eyebrow_landmks);
+	right_feats = get_feats(r_eyebrow_landmks);
+}
+
+void frame::extract_eyebrow_feat(frame *neutral_frame)
+{
+	extract_left_eyebrow_feat(neutral_frame->l_centroid);
+	extract_right_eyebrow_feat(neutral_frame->r_centroid);
+}
+
+// Helper func used by eye_feat_ratio. Calculate the ratio between the neutral and peek frames. 
+std::vector<float> frame::calc_eye_feat_ratio(std::vector<float> peek_feat, std::vector<float> neutral_feat)
 {
 	std::vector<float> eye_feat;
 	float temp;
@@ -163,12 +172,24 @@ std::vector<float> frame::eye_feat_ratio(std::vector<float> peek_feat, std::vect
 	return eye_feat;
 }
 
+// call calc_eye_feat_ratio to calc eye features for both left and right then return the combined results
+std::vector<float> frame::eye_feat_ratio(frame *peak_frame, frame *neutral_frame)
+{
+	std::vector<float> final_features_l = calc_eye_feat_ratio(peak_frame->left_feats, neutral_frame->left_feats);
+	std::vector<float> final_features_r = calc_eye_feat_ratio(peak_frame->right_feats, neutral_frame->right_feats);
+	// Combine the two vectors
+	final_features_l.insert(final_features_l.end(), final_features_r.begin(), final_features_r.end());
+	return final_features_l;
+
+}
+
+
 // Helper function used by calc_probs that calculates probability mass
 float frame::get_probability(float feat, float mean, float std, float precision)
 {
-	cout << '\n' << "Mean: " << mean << " Feat: " << feat << " Std: " << std;
-	cout << '\n' << "Value: " << exp( -pow( (feat - mean), 2 )/(2* pow(std,2)) )/( pow( (2*3.14), (1/2) )*std ); 
-	cout << std::endl;
+	//cout << '\n' << "Mean: " << mean << " Feat: " << feat << " Std: " << std;
+	//cout << '\n' << "Value: " << exp( -pow( (feat - mean), 2 )/(2* pow(std,2)) )/( pow( (2*3.14), (1/2) )*std ); 
+	//cout << endl;
 	return exp( -pow( (feat - mean), 2 )/(2* pow(std,2)) )/( pow( (2*3.14), (1/2) )*std );
 }
 
@@ -188,11 +209,11 @@ std::vector<float> frame::calc_probs(std::vector<float> model_vals, std::vector<
 	{
 			prob_a += log(get_probability(feat_vals[lin_count], model_vals[i], model_vals[i+1], model_vals[i+3]));
 			prob_b += log(get_probability(feat_vals[lin_count], model_vals[i+itr_size/2], model_vals[i+itr_size/2 +1], model_vals[i+itr_size/2+2]));
+			cout << feat_vals[lin_count] << endl;
 			lin_count++;
 	}
-	cout << endl << "prob a " << prob_a;
-	cout << endl << "prob b " << prob_b;
-	
+	//cout << "PROB A: " << prob_a << endl;
+	//cout << "PROB B: " << prob_b << endl;
 	class_probs.push_back(prob_a);
 	class_probs.push_back(prob_b);
 	return class_probs;

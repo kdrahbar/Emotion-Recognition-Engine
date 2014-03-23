@@ -83,39 +83,25 @@ int main()
 	neutral->rotate();
 	neutral->calc_centroids();
 	
-	std::vector<float> lndmk_l = neutral->extract_eyebrow_feat(neutral->l_centroid, neutral->l_eyebrow_landmks);
-	std::vector<float> lndmk_r = neutral->extract_eyebrow_feat(neutral->r_centroid, neutral->r_eyebrow_landmks);
-	cout << "\n" << "Neutral Left Landmarks: ";
-	debug::print_vec(lndmk_l);
-	cout << "\n" << "Neutral Right Landmarks: ";
-	debug::print_vec(lndmk_r);
+	neutral->extract_eyebrow_feat(neutral);
+	
 
 	frame *tst_frame = new frame(lndmarks, 1);
 	tst_frame->rotate();
 	tst_frame->calc_centroids();
 
-	std::vector<float> tst_lndmk_l = tst_frame->extract_eyebrow_feat(neutral->l_centroid, tst_frame->l_eyebrow_landmks);
-	std::vector<float> tst_lndmk_r = tst_frame->extract_eyebrow_feat(neutral->r_centroid, tst_frame->r_eyebrow_landmks);
-	cout <<"\n" << "Test Landmarks Left:";
-	debug::print_vec(tst_lndmk_l);
-	cout <<"\n" << "Test Landmarks Right:";
-	debug::print_vec(tst_lndmk_r);
+	tst_frame->extract_eyebrow_feat(neutral);
 
-	std::vector<float> final_features_l = frame::eye_feat_ratio(tst_lndmk_l, lndmk_l);
-	std::vector<float> final_features_r = frame::eye_feat_ratio(tst_lndmk_r, lndmk_r);
-
-	final_features_l.insert(final_features_l.end(), final_features_r.begin(), final_features_r.end());
-	std::vector<float> final_features = final_features_l;
+	std::vector<float> final_features = frame::eye_feat_ratio(tst_frame, neutral);
 
 	system("python naive_bayes_parse.py"); // Python parser that cleans up the original naive bayes file
 	std::vector<float> naive_bayes_file = bayes_parser(bayes_file_name);
-	cout << "Size of naive file" << naive_bayes_file.size();
 	//debug::print_vec(naive_bayes_file);
 
 	std::vector<float> prob_vec;
 	prob_vec = frame::calc_probs(naive_bayes_file, final_features);
-	cout << "\n" << "Class Probabilities: ";
-	debug::print_vec(prob_vec);
+	//cout << "\n" << "Class Probabilities: ";
+	//debug::print_vec(prob_vec);
 	//Print class B values from bayes parser
 	//cout << "Class B begins: " << '\n' << '\n';
 	//int file_size = naive_bayes_file.size();
