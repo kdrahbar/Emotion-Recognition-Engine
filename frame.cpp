@@ -168,6 +168,7 @@ float frame::get_probability(float feat, float mean, float std, float precision)
 {
 	cout << '\n' << "Mean: " << mean << " Feat: " << feat << " Std: " << std;
 	cout << '\n' << "Value: " << exp( -pow( (feat - mean), 2 )/(2* pow(std,2)) )/( pow( (2*3.14), (1/2) )*std ); 
+	cout << std::endl;
 	return exp( -pow( (feat - mean), 2 )/(2* pow(std,2)) )/( pow( (2*3.14), (1/2) )*std );
 }
 
@@ -175,18 +176,23 @@ float frame::get_probability(float feat, float mean, float std, float precision)
 std::vector<float> frame::calc_probs(std::vector<float> model_vals, std::vector<float> feat_vals)
 {
 	float prob_a = log(model_vals[0]);
-	float prob_b = log(model_vals[model_vals.size()/2 - 1]);
+	float prob_b = log(model_vals[model_vals.size()/2]); // Get model B's value
+	model_vals.erase(model_vals.begin()); // Erase the class probability of A from the vector
+	model_vals.erase(model_vals.begin() + model_vals.size()/2); // Erase the class probability of B from the vector
 	int itr_size = model_vals.size();
-	int lin_count = 2; // start at two since the first two values from the bayes vector are the class probs
+	int lin_count = 0; 
 	std:vector<float> class_probs; // Vector of size two holding prob for class A and B
-   	
+
 	// Iterate through each feature for class A and B and sum to get the probability
-	for(int i = 1; i < itr_size ; i+=3)
+	for(int i = 0; i < itr_size/2 ; i+=3)
 	{
 			prob_a += log(get_probability(feat_vals[lin_count], model_vals[i], model_vals[i+1], model_vals[i+3]));
 			prob_b += log(get_probability(feat_vals[lin_count], model_vals[i+itr_size/2], model_vals[i+itr_size/2 +1], model_vals[i+itr_size/2+2]));
 			lin_count++;
 	}
+	cout << endl << "prob a " << prob_a;
+	cout << endl << "prob b " << prob_b;
+	
 	class_probs.push_back(prob_a);
 	class_probs.push_back(prob_b);
 	return class_probs;

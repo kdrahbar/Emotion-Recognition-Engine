@@ -109,7 +109,8 @@ int main()
 
 	system("python naive_bayes_parse.py"); // Python parser that cleans up the original naive bayes file
 	std::vector<float> naive_bayes_file = bayes_parser(bayes_file_name);
-	debug::print_vec(naive_bayes_file);
+	cout << "Size of naive file" << naive_bayes_file.size();
+	//debug::print_vec(naive_bayes_file);
 
 	std::vector<float> prob_vec;
 	prob_vec = frame::calc_probs(naive_bayes_file, final_features);
