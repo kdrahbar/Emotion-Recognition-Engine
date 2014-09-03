@@ -1,78 +1,52 @@
-Naive Bayes Classifier
-
-                 Class
-Attribute            A       B
-                (0.33)  (0.67)
-===============================
-Feature1
-  mean          16.2726 -9.9522
-  std. dev.     25.5458 13.3013
-  weight sum         21      44
-  precision      2.0462  2.0462
-
-Feature2
-  mean          93.8161 -32.556
-  std. dev.     38.5756 18.5701
-  weight sum         21      44
-  precision      4.0125  4.0125
-
-Feature3
-  mean           9.0279   6.956
-  std. dev.      6.3944  5.2089
-  weight sum         21      44
-  precision      0.3584  0.3584
-
-Feature4
-  mean          12.9075 14.2736
-  std. dev.     12.7359 12.7909
-  weight sum         21      44
-  precision      0.8858  0.8858
-
-Feature5
-  mean           2.3147 -3.7319
-  std. dev.      3.5797  7.1722
-  weight sum         21      44
-  precision      0.5928  0.5928
-
-Feature6
-  mean          30.9872 -44.0804
-  std. dev.     17.5234 23.4955
-  weight sum         21      44
-  precision       2.532   2.532
-
-Feature7
-  mean          74.3836 -35.827
-  std. dev.     38.8537 18.5692
-  weight sum         21      44
-  precision      3.5827  3.5827
-
-Feature8
-  mean          16.9496  -17.35
-  std. dev.     28.0346    12.8
-  weight sum         21      44
-  precision      2.3417  2.3417
-
-Feature9
-  mean           6.9614 19.8217
-  std. dev.      5.3492  14.201
-  weight sum         21      44
-  precision      0.8306  0.8306
-
-Feature10
-  mean          18.2911 16.2362
-  std. dev.     12.7469 10.5984
-  weight sum         21      44
-  precision      0.9124  0.9124
-
-Feature11
-  mean           2.6406 -4.0636
-  std. dev.       3.289   6.353
-  weight sum         21      44
-  precision      0.5183  0.5183
-
-Feature12
-  mean          23.6077 -47.7305
-  std. dev.     16.3927 19.5799
-  weight sum         21      44
-  precision      2.4913  2.4913
-
+2
+12
+0.32
+3.55
+14.62
+32.41
+25.54
+3.46
+2.86
+8.31
+7.30
+2.54
+5.40
+23.01
+16.74
+31.90
+24.36
+4.46
+16.27
+5.45
+4.25
+10.56
+6.27
+3.60
+5.49
+23.69
+15.08
+0.68
+-8.95
+8.86
+-21.62
+11.22
+4.50
+3.23
+10.35
+10.62
+-8.84
+6.43
+-44.21
+24.06
+-23.08
+11.73
+-9.31
+9.29
+10.70
+9.31
+10.25
+7.32
+-8.40
+6.08
+-42.04
+23.19
